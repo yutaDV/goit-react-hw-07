@@ -1,55 +1,43 @@
 
 import './App.css';
-import { useState, useEffect  } from 'react';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import ContactList from './components/ContactList/ContactList';
 import SearchBox from './components/SearchBox/SearchBox';
 import ContactForm from './components/ContactForm/ContactForm';
-import contactsData from './contacts.json';
+import { fetchContacts, addContact, deleteContact } from './redux/contactsOps';
+import { selectFilteredContacts } from './redux/contactsSlice';
+import { selectNameFilter } from './redux/filtersSlice';
 
 function App() {
-  const [contacts, setContacts] = useState(contactsData);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const saveContactsToLocalStorage = (contacts) => {
-    localStorage.setItem('contacts', JSON.stringify(contacts));
-  };
-
-  const loadContactsFromLocalStorage = () => {
-    const storedContacts = localStorage.getItem('contacts');
-    return storedContacts ? JSON.parse(storedContacts) : contactsData;
-  };
-  useEffect(() => {
-    const initialContacts = loadContactsFromLocalStorage();
-    setContacts(initialContacts);
-  }, []);
+  const dispatch = useDispatch();
+  const contacts = useSelector(selectFilteredContacts);
+  const searchQuery = useSelector(selectNameFilter);
 
   useEffect(() => {
-    saveContactsToLocalStorage(contacts);
-  }, [contacts]);
+    // Запит на отримання контактів при завантаженні додатку
+    dispatch(fetchContacts());
+  }, [dispatch]);
+
   const handleSearchChange = (query) => {
-    setSearchQuery(query);
+    dispatch({ type: 'filters/setFilter', payload: query });
   };
 
   const handleDeleteContact = (id) => {
-    setContacts((prevContacts) => prevContacts.filter(contact => contact.id !== id));
+    dispatch(deleteContact(id));
   };
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddContact = (newContact) => {
-    setContacts((prevContacts) => [...prevContacts, newContact]);
+    dispatch(addContact(newContact));
   };
 
   return (
-    <>
-      <div>
-        <h1>Phonebook</h1>
-        <ContactForm onAddContact={handleAddContact} />
-        <SearchBox value={searchQuery} onChange={handleSearchChange} />
-        <ContactList contacts={filteredContacts} onDeleteContact={handleDeleteContact}  />
-      </div>
-    </>
+    <div>
+      <h1>Phonebook</h1>
+      <ContactForm onAddContact={handleAddContact} />
+      <SearchBox value={searchQuery} onChange={handleSearchChange} />
+      <ContactList contacts={contacts} onDeleteContact={handleDeleteContact} />
+    </div>
   );
 }
 
