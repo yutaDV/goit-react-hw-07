@@ -15,7 +15,6 @@ function App() {
   const searchQuery = useSelector(selectNameFilter);
 
   useEffect(() => {
-    // Запит на отримання контактів при завантаженні додатку
     dispatch(fetchContacts());
   }, [dispatch]);
 
